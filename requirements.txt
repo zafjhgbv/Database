@@ -1,14 +1,21 @@
-
+# Jira & Confluence API
 jira>=3.5.0
 atlassian-python-api>=3.41.0
 
-
+# HTTP 请求
 requests>=2.31.0
 
-
+# 数据库
 SQLAlchemy>=2.0.0
 
-
+# 环境变量和日期处理
 python-dotenv>=1.0.0
 python-dateutil>=2.8.2
+
+# Flask API 服务器
+Flask>=3.0.0
+Flask-CORS>=4.0.0
+
+# 定时任务调度
+APScheduler>=3.10.0
 

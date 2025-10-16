@@ -56,10 +56,26 @@ def validate_config():
     
     logging.info("✓ 配置验证通过")
 
-def main():
+def run_sync():
+    """
+    执行同步任务的核心函数
+    返回同步结果的字典
+    """
     logging.info("=" * 60)
     logging.info("开始 Jira-Confluence-Dify 同步任务")
     logging.info("=" * 60)
+    
+    result = {
+        'status': 'success',
+        'synced': 0,
+        'skipped': 0,
+        'failed': 0,
+        'total': 0,
+        'start_time': datetime.now().isoformat(),
+        'end_time': None,
+        'message': '',
+        'error': None
+    }
     
     try:
         # 0. 验证配置
@@ -101,7 +117,9 @@ def main():
 
         if not all_items:
             logging.info("\n✓ 没有需要同步的数据。")
-            return
+            result['message'] = '没有需要同步的数据'
+            result['end_time'] = datetime.now().isoformat()
+            return result
         
         logging.info(f"\n{'='*60}")
         logging.info(f"共获取 {len(all_items)} 条数据，开始版本控制检查...")
@@ -195,13 +213,38 @@ def main():
         logging.info(f"  总计: {len(all_items)} 条")
         logging.info(f"{'='*60}")
         
+        result['synced'] = synced_count
+        result['skipped'] = skipped_count
+        result['failed'] = failed_count
+        result['total'] = len(all_items)
+        result['message'] = f'同步完成: 成功{synced_count}条, 跳过{skipped_count}条, 失败{failed_count}条'
+        result['end_time'] = datetime.now().isoformat()
+        
+        return result
+        
     except ValueError as e:
-        logging.error(f"\n✗ 配置错误: {e}")
+        error_msg = f"配置错误: {str(e)}"
+        logging.error(f"\n✗ {error_msg}")
         logging.error("请检查 .env 文件中的配置信息。")
+        result['status'] = 'error'
+        result['error'] = error_msg
+        result['end_time'] = datetime.now().isoformat()
+        return result
     except Exception as e:
-        logging.error(f"\n✗ 同步任务发生意外错误: {e}", exc_info=True)
+        error_msg = f"同步任务发生意外错误: {str(e)}"
+        logging.error(f"\n✗ {error_msg}", exc_info=True)
+        result['status'] = 'error'
+        result['error'] = error_msg
+        result['end_time'] = datetime.now().isoformat()
+        return result
     finally:
         logging.info("\n任务结束\n")
+
+def main():
+    """命令行入口函数"""
+    result = run_sync()
+    if result['status'] == 'error':
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()
